@@ -3,7 +3,7 @@
 
 set -e
 
-PATH="/data/data/loger/stb/kadun-401/kadun-"
+OPATH="/data/data/loger/stb/kadun-401/kadun-"
 
 if [ -z "$1" ];then
     echo -e "USAGE: code [num]"
@@ -18,7 +18,7 @@ else
     TIME=$(/bin/date "+%Y-%m-%d")
 fi
 
-file=${PATH}${TIME}*
+file=${OPATH}${TIME}*
 tmpfile="/tmp/401-log"
 
 function Parse() {

@@ -7,7 +7,7 @@ LOG="/nginxlogs/tms.access.log"
 MIN=$1
 
 # minutes must great than 30
-if [[ -n "$1" && "$1" > 30 ]];then
+if [[ -n "$1" && "$1" -gt 30 ]];then
     PRETIME=$(date -d "-$1 min" "+%Y-%m-%dT%T")
 else
     PRETIME=$(date -d "-30 min" "+%Y-%m-%dT%T")
