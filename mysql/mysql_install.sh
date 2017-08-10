@@ -14,7 +14,7 @@ basedir="/usr/local/mysql"
 datadir="/storage/db"
 socket="/tmp/mysql.sock"
 user="mysql"
-password="wxgdwxwx"
+password="123456"
 
 netstat -tupln | grep -w -q $port && { echo -e "${RED}${port} has been occupied${BLACK}\n"; exit 1; }
 
