@@ -30,7 +30,7 @@ do
     do
         echo "$tomcat:$port" >> log
         curl --connect-timeout 5 "http://$tomcat:$port/$URI" >> log
-        echo
         sleep 0.5
+        echo
     done
 done
