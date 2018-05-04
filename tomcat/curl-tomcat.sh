@@ -22,14 +22,12 @@ tomcats=( \
 
 ports=( 6100 6101 6102 6103 6104 )
 
-:>log
-
 for port in "${ports[@]}"
 do
     for tomcat in "${tomcats[@]}"
     do
-        echo "$tomcat:$port" >> log
-        curl --connect-timeout 5 "http://$tomcat:$port/$URI" >> log
+        echo "$tomcat:$port"
+        curl --connect-timeout 5 "http://$tomcat:$port/$URI" >> $tomcat-$port
         sleep 0.5
         echo
     done

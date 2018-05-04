@@ -10,8 +10,8 @@ YELLOW="\\033[33m"
 BLACK="\\033[0m"
 
 port="3306"
-basedir="/usr/local/mysql"
-datadir="/storage/db"
+basedir="/data/server/mysql"
+datadir="/data/data/mysql"
 socket="/tmp/mysql.sock"
 user="mysql"
 password="123456"
@@ -37,7 +37,9 @@ function mysql_install () {
     echo -e "${GREEN}uncompress mysql file${BLACK}\n"
     cd /usr/local/src
     tar -xz -f mysql-5.6.35-linux-glibc2.5-x86_64.tar.gz
-    cp -rf mysql-5.6.35-linux-glibc2.5-x86_64 $basedir
+    \mv mysql-5.6.35-linux-glibc2.5-x86_64 ${basedir%/*}
+    cd ${basedir%/*}
+    ln -sf mysql-5.6.35-linux-glibc2.5-x86_64 mysql
     chown -R $user:$user $basedir
     install -m755 ${basedir}/support-files/mysql.server /etc/init.d/mysqld
 }
@@ -65,7 +67,8 @@ function init_db () {
     --basedir=$basedir \
     --datadir=$datadir
     [ $? != 0 ] && { echo -e "${RED}mysql init_db fail !!!${BLACK}\n"; exit 1; }
-    ln -sf ${basedir}/bin/mysql /usr/local/bin/mysql
+    mkdir -p /usr/local/mysql/bin
+    ln -sf ${basedir}/bin/mysqld /usr/local/mysql/bin/mysqld
 }
 
 function self_boot () {
