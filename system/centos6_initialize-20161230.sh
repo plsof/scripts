@@ -19,8 +19,6 @@ yum -y install iscsi-initiator-utils
 yum -y install inotify-tools 
 
 
-
-
 # [base], [addons], [updates], [extras] ... priority=1
 # [centosplus],[contrib] ... priority=2
 # Third Party Repos such as rpmforge ... priority=N  (where N is > 10 and based on your preference)
@@ -48,7 +46,6 @@ yum -y install lsb
 echo "ipvsadm --set 120 10 120" >> /etc/rc.local
 echo 'options ip_vs conn_tab_bits=20'>/etc/modprobe.d/ipvsadm.conf 
 echo "options nf_conntrack hashsize=131072" > /etc/modprobe.d/nf_conntrack.conf 
-
 
 
 #zone and ntp
@@ -149,13 +146,7 @@ EOF
 /sbin/sysctl -p
 
 
-
-
-#define the backspace button can erase the last character typed
-echo 'stty erase ^H' >> /etc/profile
- 
 echo "syntax on" >> /root/.vimrc
-
 
 
 #for irqbalance g_list_free_full
@@ -186,9 +177,54 @@ yum -y install iscsi-initiator-utils xfsprogs inotify-tools hdparm
 mkdir -p /data/{data,app,server,scripts,tmp,logs,tools}
 
 
+#add user
+groupadd -f sclc_ops
+groupadd -f scyd_ops
+groupadd -f wxzx_ops
+cp -f /etc/sudoers /etc/sudoers.bak
+grep -q "sclc_ops" /etc/sudoers | echo "%sclc_ops ALL=(ALL) ALL" >>/etc/sudoers
+grep -q "scyd_ops" /etc/sudoers | echo "%scyd_ops ALL=(ALL) ALL" >>/etc/sudoers
+grep -q "wxzx_ops" /etc/sudoers | echo "%wxzx_ops ALL=(ALL) ALL" >>/etc/sudoers
+
+useradd pandongdong_cmsc08 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd pandongdong_cmsc08 --stdin
+
+useradd pukelei_cmsc06 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd pukelei_cmsc06 --stdin
+
+useradd lichangyong_cmsc01 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd lichangyong_cmsc01 --stdin
+
+useradd tanglong_cmsc03 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd tanglong_cmsc03 --stdin
+
+useradd chenhongliang_cmsc10 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd chenhongliang_cmsc10 --stdin
+
+useradd chenquan_cmsc09 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd chenquan_cmsc09 --stdin
+
+useradd fanrui_cmsc10 -g sclc_ops
+echo "E58H-pR2l8]IxEYg" | passwd fanrui_cmsc10 --stdin
+
+
+cp -f /etc/profile /etc/profile.bak
+cat >>/etc/profile <<EOF
+stty erase ^H
+TMOUT=180
+export TMOUT
+
+#export HISTTIMEFORMAT="`whoami` : |  %F  | %T: |"
+HISTFILESIZE=2000
+HISTSIZE=2000
+HISTTIMEFORMAT="%Y%m%d-%H%M%S: "
+export HISTTIMEFORMAT
+export PROMPT_COMMAND='{ command=$(history 1 | { read x y; echo $y; }); logger -p local1.notice -t bash -i "user=$USER,ppid=$PPID,from=$SSH_CLIENT,pwd=$PWD,command:$command"; }'
+EOF
+
 cat << EOF
 +-------------------------------------------------+
-|               optimizer is done                               |
-|   it's recommond to restart this server !             |
+|               optimizer is done                 |
+|   it's recommond to restart this server !       |
 +-------------------------------------------------+
 EOF
