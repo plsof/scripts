@@ -1,4 +1,5 @@
 #!/bin/bash
+# $4 is access time
 
 # WTV EPG
 LOGFILE="/data/nginxlogs/looktvepg.access.log"
