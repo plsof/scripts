@@ -1,4 +1,4 @@
-##Ysten Nginx Log Parse
+## Nginx Log Parse
 
 ### Log Format
 	log_format ystenlog '$remote_addr - $remote_user [$time_iso8601] "$request" '
