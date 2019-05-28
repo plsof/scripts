@@ -3,6 +3,7 @@
 
 import time
 import json
+import threading
 import sqlite3
 import urllib2
 
@@ -15,7 +16,6 @@ URL_ALLDAY = "http://127.0.0.1:6000/ysten-lvoms-epg/epg/getAllDayPrograms.shtml?
 F_UUID = open("/tmp/Monitor/apidata/uuiddiff", 'w')
 F_ALLDAY = open("/tmp/Monitor/apidata/alldaydiff", 'w')
 
-# 获取今天的日期
 TTIME = time.strftime("%Y%m%d", time.localtime(time.time()))
 
 
@@ -25,55 +25,56 @@ def alldayverify(uuid, template):
         response = urllib2.urlopen(url_allday, timeout=1)
     except urllib2.URLError:
         print >>F_ALLDAY, 0
-        return 1  # 退出当前template循环
+        return 0  # 退出当前循环
     else:
         data = json.load(response)
         if len(data) != 0:
             otime = time.strftime("%Y%m%d", time.localtime(float(data[0]['playDate'])))
-            if otime >= TTIME:  # data[0]有时候是明天的节目单信息，考虑下23:30的data[0],data[1]
+            if otime >= TTIME:  #  有发现个别uuid有明天的节目单 考虑下23:30的节目单
+                #  取第一个节目单的开始时间到当前节目单的结束时间
                 alltime = data[0]['programs']
                 futuret = []
-                nfuturet = []
                 nowt = []
-                # replayt = []
+                replayt = []
                 for i in alltime:
                     if i['urlType'] == 'none':
                         futuret.append(i['endTime'])
                         futuret.append(i['startTime'])
                     if i['urlType'] == 'play':
                         nowt.append(i['endTime'])
-                    # if i['urlType'] == 'replay':
-                    #     replayt.append(i['endTime'])
-                    #     replayt.append(i['startTime'])
-                if len(nowt) == 0:  # data[0]为明天的节目单，且只有一个预加载节目单, 另一个节目单在今天data[1] 0286 SD-1500k-576P-scchengdu4
-                    for i in data[1]['programs']:  # 23:30的直播信息在data[1], 第一个预加载节目单可能也在。
+                    if i['urlType'] == 'replay':
+                        replayt.append(i['endTime'])
+                        replayt.append(i['startTime'])
+                if len(nowt) == 0:
+                    for i in data[1]['programs']:  # 23:30的直播信息在data[1]
+                        if i['urlType'] == 'play':
+                            nowt.append(i['endTime'])
+                if len(futuret) < 4:  # data[0]为明天的节目单，且只有一个预加载节目单, 另一个节目单在今天data[1] 0286 SD-1500k-576P-scchengdu4
+                    for i in data[1]['programs']:
                         if i['urlType'] == 'none':
                             futuret.append(i['endTime'])
                             futuret.append(i['startTime'])
-                        if i['urlType'] == 'play':
-                            nowt.append(i['endTime'])
-                if len(nowt) == 0:  # 判断是否有直播节目单
+                if len(nowt) == 0:  # 判断是否有直播节目单信息
                     print >> F_ALLDAY, "%s %s programs now miss" % (template, uuid)
-                    return 1  # 没有直播节目单则退出当前uuid循环
-                nfuturet = [x for x in futuret if x >= nowt[0]]  # 判断黑莓replay tag为空
-                if len(nfuturet) == 0:  # 判断是否有预加载节目单
+                    return 1  # 没有当前直播节目单信息则退出
+                if len(futuret) == 0:  # 判断是否预加载节目单
                     print >>F_ALLDAY, "%s %s programs future miss" % (template, uuid)
-                elif len(nfuturet) == 2:  # 判断预加载一个节目单
+                elif len(futuret) == 2:  # 判断预加载一个节目单
                     print >> F_ALLDAY, "%s %s programs future less" % (template, uuid)
-                elif nowt[0] == nfuturet[-1] and nfuturet[-2] == nfuturet[-3]:
+                elif nowt[0] == futuret[3] and futuret[2] == futuret[1]:
                     print >>F_ALLDAY, "%s %s programs ok" % (template, uuid)
-                elif nowt[0] < nfuturet[-1] or nfuturet[-2] < nfuturet[-3]:
-                    print >>F_ALLDAY, "%s %s programs future uncontinuity" % (template, uuid)  # 节目单时间不连续
                 else:
-                    # print >>F_ALLDAY, "%s %s programs future overlap" % (template, uuid)  # 节目单时间有重叠
-                    pass
+                    print >>F_ALLDAY, "%s %s programs disorder" % (template, uuid)
             else:
                 print >>F_ALLDAY, "%s %s programs today miss" % (template, uuid)
         else:
             print >> F_ALLDAY, "%s %s programs null" % (template, uuid)
 
 
-def uuidverify(c, template):
+def uuidverify(template):
+    #  print 'thread %s %s is running...' % (threading.current_thread().name, template)
+    conn = sqlite3.connect('/data/tmp/wtv.db')
+    c = conn.cursor()
     url_uuid = URL_UUID % template
     try:
         response = urllib2.urlopen(url_uuid, timeout=1)
@@ -99,10 +100,17 @@ def uuidverify(c, template):
 
 if __name__ == '__main__':
 
-    conn = sqlite3.connect('/data/tmp/wtv.db')
-    c = conn.cursor()
+    # conn = sqlite3.connect('/data/tmp/wtv.db')
+    # c = conn.cursor()
+    threads = []
     for template in TEMPLATES:
-        uuidverify(c, template)
+        threadt = threading.Thread(target=uuidverify, args=(template,), name='LoopThread')
+        threads.append(threadt)
+        # uuidverify(c, template)
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
     F_UUID.flush()
     F_UUID.close()
     F_ALLDAY.flush()
