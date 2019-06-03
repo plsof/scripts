@@ -93,7 +93,7 @@ def uuidverify(c, template):
                 alldayverify(uuid[0], template)
         else:
             print>>F_UUID, template, difference
-            for uuid in online:
+            for uuid in [i for i in default if i in online]:
                 alldayverify(uuid[0], template)
 
 
